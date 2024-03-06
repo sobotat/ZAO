@@ -6,37 +6,48 @@ from PIL import ImageGrab
 
 class Locator:
 
-    def __init__(self, templates: list[ndarray], showDebug:bool = False, minMatchPercent:int = 95):
+    def __init__(self, templates: list[ndarray], showDebug:bool = False, minMatchPercent:int = 95, maxMovement:int = 13):
         self.templates = templates
         self.boxBorder = 150
         self.showDebug = showDebug
         self.minMatchPercent = minMatchPercent
+        self.maxMovement = maxMovement
+        self.debug_screenshots = [ndarray([]), ndarray([])]
 
         if showDebug:
             cv.namedWindow("debug-1", 0)
             cv.namedWindow("debug-2", 0)
 
-    def locate(self, windowScaling:float) -> tuple:
+    def locate(self,windowScaling:float, usePrediction:bool = True) -> tuple:
 
         center_1 = self.captureAndFindOnScreenshot(index=1)
-        cv.waitKey(35)
-        center_2 = self.captureAndFindOnScreenshot(bbox=(center_1[0] - self.boxBorder, center_1[1] - self.boxBorder, center_1[0] + self.boxBorder, center_1[1] + self.boxBorder), index=2)
+        center = center_1
+        diff = 0, 0
 
-        diff = self.getDiff(center_2, center_1)
-        diff = diff
-        center = center_2
+        if usePrediction:
+            cv.waitKey(50)
+            center_2 = self.captureAndFindOnScreenshot(bbox=(center_1[0] - self.boxBorder, center_1[1] - self.boxBorder, center_1[0] + self.boxBorder, center_1[1] + self.boxBorder), index=2)
 
-        offset = 0.3
-        center = (center[0] + diff[0] * offset, center[1] + diff[1] * offset)
+            diff = self.getDiff(center_2, center_1)
+            center = center_2
+
+            offset = 2.5
+            center = (center[0] + diff[0] * offset, center[1] + diff[1] * offset)
+
+        if self.showDebug:
+            cv.circle(self.debug_screenshots[0], (int(center[0]), int(center[1])), 16, (128, 255, 128), cv.FILLED)
+            cv.imshow("debug-1", self.debug_screenshots[0])
+
         center = center[0] * 1 / windowScaling, center[1] * 1 / windowScaling
 
-        diffThreshold = 13
-        if abs(diff[0]) >= diffThreshold or abs(diff[1]) >= diffThreshold:
-            raise UnableToLocateException(f"\033[1;31mLarge Movement:\033[0m Diffs[{round(diff[0], 2)} {round(diff[1], 2)}] >= {diffThreshold}")
-
         print(f"\033[1;34mLocation:\033[0m [{round(center[0], 2)} {round(center[1], 2)}]")
-        print(f"\033[1;34mDifference:\033[0m {diff}")
-        return center
+        if usePrediction:
+            if abs(diff[0]) >= self.maxMovement or abs(diff[1]) >= self.maxMovement:
+                raise UnableToLocateException(
+                    f"\033[1;31mLarge Movement:\033[0m Diffs[{round(diff[0], 2)} {round(diff[1], 2)}] >= {self.maxMovement}")
+
+            print(f"\033[1;34mDifference:\033[0m {diff}")
+        return center, diff
 
     @staticmethod
     def getDiff(a: tuple, b: tuple) -> tuple:
@@ -44,17 +55,17 @@ class Locator:
 
     def captureAndFindOnScreenshot(self, bbox:tuple | None = None, index:int = 1):
         screenshot = self.captureScreenshot(bbox)
-        screenshot_debug = screenshot.copy()
+        self.debug_screenshots[index - 1] = screenshot.copy()
 
         center = None
         for template in self.templates:
-            center = self.findOnScreenshot(screenshot, screenshot_debug, template)
+            center = self.findOnScreenshot(screenshot, self.debug_screenshots[index - 1], template)
 
             if center is not None:
                 break
 
         if self.showDebug:
-            cv.imshow(f"debug-{index}", screenshot_debug)
+            cv.imshow(f"debug-{index}", self.debug_screenshots[index - 1])
 
         if center is None:
             raise UnableToLocateException(f"\033[1;33mNot Found {index}\033[0m")
@@ -79,8 +90,7 @@ class Locator:
         tmp_out = cv.matchTemplate(screenshot, template, cv.TM_SQDIFF_NORMED)
         min_val, max_val, min_loc, max_loc = cv.minMaxLoc(tmp_out)
 
-        cv.circle(screenshot_debug, min_loc, 16, (255, 0, 0), cv.FILLED)
-        cv.circle(screenshot_debug, max_loc, 16, (0, 255, 0), cv.FILLED)
+        cv.rectangle(screenshot_debug, min_loc, (min_loc[0] + template_w, min_loc[1] + template_h), (255, 0, 0), 5)
 
         match_percents = (1 - min_val) * 100 - 0.1
         print(f"\033[1;36mMatch Percents:\033[0m [{round(match_percents, 2)}%]")

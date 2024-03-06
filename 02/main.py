@@ -34,12 +34,16 @@ def loadAndSaveSettings():
             remove("setting.json")
 
 if __name__ == "__main__":
-    loadAndSaveSettings()
-
     mouseController = mouse.Controller()
 
+    loadAndSaveSettings()
+    usePrediction = input("Use Prediction: ").lower() in ["yes", "y", "true"]
+
     filenames = ["templates/target2.png"]
-    # filenames = ["templates/duck1.png", "templates/duck2.png", "templates/duck3.png"]
+    maxMovement = 13
+
+    # filenames = ["templates/duck1.png", "templates/duck2.png", "templates/duck3.png", "templates/duck4.png"]
+    # maxMovement = 100
 
     templates = []
     for filename in filenames:
@@ -47,14 +51,13 @@ if __name__ == "__main__":
         template = cv.cvtColor(template, cv.COLOR_BGR2GRAY)
         templates.append(template)
 
-    locator = Locator(templates, showDebug, minMatchPercent)
+    locator = Locator(templates, showDebug, minMatchPercent, maxMovement)
 
     cv.waitKey(1000)
     lastMousePos = mouseController.position
 
     try:
         while True:
-
             if abs(lastMousePos[0] - mouseController.position[0] >= 25) or abs(
                     lastMousePos[1] - mouseController.position[1] >= 25):
                 print("\033[1;31mPaused because of mouse movement\033[0m")
@@ -65,7 +68,7 @@ if __name__ == "__main__":
             print("\033[1;37m--------------------------------\033[0m")
 
             try:
-                center = locator.locate(windowScaling)
+                center, diff = locator.locate(windowScaling, usePrediction=usePrediction)
                 mouseController.position = center
                 mouseController.press(mouse.Button.left)
                 mouseController.release(mouse.Button.left)
@@ -73,6 +76,6 @@ if __name__ == "__main__":
                 lastMousePos = center
             except UnableToLocateException as ue:
                 print(ue)
-            cv.waitKey(500)
+            cv.waitKey(650)
     except KeyboardInterrupt:
         print("Exiting")
