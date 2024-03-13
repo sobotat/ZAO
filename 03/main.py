@@ -95,16 +95,22 @@ def drawView(imageView, coords:list, indexOfParkingPlace, color):
 def f1_score(true, predicted):
     TP = FP = FN = 0
     for p, t in zip(predicted, true):
-        if p == 1 and t == 1:
+        if p == t:
             TP += 1
         elif p == 1 and t == 0:
             FP += 1
-        elif p == 0 and t == 1:
+        else:
             FN += 1
-    precision = TP / (TP + FP) if (TP + FP) > 0 else 0
-    recall = TP / (TP + FN) if (TP + FN) > 0 else 0
-    f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
-    return f1
+
+    print(TP, FP, FN)
+
+    precision = TP / (TP + FP)
+    recall = TP / (TP + FN)
+
+    if precision + recall == 0:
+        return 0
+    return 2 * (precision * recall) / (precision + recall)
+
 
 def main(argv):
     useSlowMode = input("Use slow mode: ").lower() in ["y", "yes", "t", "true"]
