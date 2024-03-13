@@ -125,6 +125,7 @@ def main(argv):
         pkm_coordinates.append(sp_line)
 
     template = cv.imread("template.jpg", 1)
+    templateSun = cv.imread("template_sun.jpg", 1)
 
     testImages = [img for img in glob.glob("images/*.jpg")]
     testImages.sort()
@@ -149,12 +150,16 @@ def main(argv):
             onePlaceImageRes = cv.resize(onePlaceImage, (80, 80))
             if useSlowMode:
                 cv.imshow("one_place", onePlaceImageRes)
+                # cv.imwrite("template_sun.jpg", onePlaceImageRes)
 
-            isEmpty, percents = isParkingEmpty(onePlaceImageRes, template, 91.2)
+            isEmptyBasic, percentsBasic = isParkingEmpty(onePlaceImageRes, template, 91.2)
+            isEmptySun, percentsSun = isParkingEmpty(onePlaceImageRes, templateSun, 95.5)
 
-            console = "\033[1;32mEmpty\033[0m" if isEmpty else "\033[1;31mOccupied\033[0m"
-            print(f"[{indexOfParkingPlace}]: {console} [{round(percents, 2)}%]")
+            console = "\033[1;32mEmpty\033[0m" if isEmptyBasic else "\033[1;31mOccupied\033[0m"
+            consoleSun = "\033[1;32mEmpty\033[0m" if isEmptySun else "\033[1;31mOccupied\033[0m"
+            print(f"[{indexOfParkingPlace}]: {console} [{round(percentsBasic, 2)}%], {consoleSun} [{round(percentsSun, 2)}%]")
 
+            isEmpty = isEmptyBasic or isEmptySun
             color = (50, 255, 0) if isEmpty else (50, 0, 255)
             detected.append(int(not isEmpty))
             if isEmpty:
