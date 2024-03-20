@@ -102,8 +102,6 @@ def f1_score(true, predicted):
         else:
             FN += 1
 
-    print(TP, FP, FN)
-
     precision = TP / (TP + FP)
     recall = TP / (TP + FN)
 
@@ -126,16 +124,18 @@ def main(argv):
 
     template = cv.imread("template.jpg", 1)
     templateSun = cv.imread("template_sun.jpg", 1)
+    # templateNight = cv.imread("template_night.jpg", 1)
 
-    testImages = [img for img in glob.glob("images/*.jpg")]
+    testImages = [img for img in glob.glob("images2/*.jpg")]
     testImages.sort()
-    testImagesResults = [img for img in glob.glob("images/*.txt")]
+    testImagesResults = [img for img in glob.glob("images2/*.txt")]
     testImagesResults.sort()
 
     if useSlowMode:
         cv.namedWindow("one_place", cv.WINDOW_NORMAL)
     cv.namedWindow("image", cv.WINDOW_NORMAL)
 
+    f1All = []
     for i in range(len(testImages)):
         print(f"\n\033[1;36mImage:\033[0m {testImages[i]}")
         image = cv.imread(testImages[i], 1)
@@ -150,16 +150,17 @@ def main(argv):
             onePlaceImageRes = cv.resize(onePlaceImage, (80, 80))
             if useSlowMode:
                 cv.imshow("one_place", onePlaceImageRes)
-                # cv.imwrite("template_sun.jpg", onePlaceImageRes)
 
             isEmptyBasic, percentsBasic = isParkingEmpty(onePlaceImageRes, template, 91.2)
             isEmptySun, percentsSun = isParkingEmpty(onePlaceImageRes, templateSun, 95.5)
+            # isEmptyNight, percentsNight = isParkingEmpty(onePlaceImageRes, templateNight, 84)
 
             console = "\033[1;32mEmpty\033[0m" if isEmptyBasic else "\033[1;31mOccupied\033[0m"
             consoleSun = "\033[1;32mEmpty\033[0m" if isEmptySun else "\033[1;31mOccupied\033[0m"
+            # consoleNight = "\033[1;32mEmpty\033[0m" if isEmptyNight else "\033[1;31mOccupied\033[0m"
             print(f"[{indexOfParkingPlace}]: {console} [{round(percentsBasic, 2)}%], {consoleSun} [{round(percentsSun, 2)}%]")
 
-            isEmpty = isEmptyBasic or isEmptySun
+            isEmpty = isEmptyBasic or isEmptySun #or isEmptyNight
             color = (50, 255, 0) if isEmpty else (50, 0, 255)
             detected.append(int(not isEmpty))
             if isEmpty:
@@ -169,15 +170,22 @@ def main(argv):
 
             cv.imshow("image", imageView)
             if useSlowMode:
-                if cv.waitKey(500) == ord('q'):
+                key = cv.waitKey(500)
+                if key == ord('q'):
                     exit(0)
+                elif key == ord('s'):
+                    cv.imwrite("template_night.jpg", onePlaceImageRes)
 
         print(f"\033[1;36mNumber of Empty:\033[0m [{countOfEmpty}/{len(pkm_coordinates)}]")
         result = getResultsForImage(testImagesResults[i])
         print(f"\033[1;36mShould be Empty:\033[0m [{len(result) - sum(result)}/{len(pkm_coordinates)}]")
-        print(f"\033[1;36mF1 Score:\033[0m {f1_score(result, detected)}")
+        f1 = f1_score(result, detected)
+        f1All.append(f1)
+        print(f"\033[1;36mF1 Score:\033[0m {f1}")
         if cv.waitKey() == ord('q'):
             exit(0)
+
+    print(f"\033[1;36mFinal F1 Score:\033[0m {sum(f1All) / len(f1All)}")
 
 if __name__ == "__main__":
     main(sys.argv[1:])
