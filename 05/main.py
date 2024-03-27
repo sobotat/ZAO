@@ -26,23 +26,13 @@ def getCrop(image, coords):
 
     return onePlaceImageRes, start_x, start_y
 
-def isEyeOpened(image, template, threshold: float) -> tuple[bool, float]:
-    image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
-    template = cv.cvtColor(template, cv.COLOR_BGR2GRAY)
-
-    tmp_out = cv.matchTemplate(image, template, cv.TM_SQDIFF_NORMED)
-    min_val, max_val, min_loc, max_loc = cv.minMaxLoc(tmp_out)
-
-    match_percents = (1 - min_val) * 100 - 0.1
-    return match_percents > threshold, match_percents
-
-def isEyeOpenedC(image, max=40):
+def isEyeOpened(image):
     gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
     blurred = cv.GaussianBlur(gray, (9, 9), 2)
 
     cv.imshow("Preprocessed Image", blurred)
 
-    circles = cv.HoughCircles(gray, cv.HOUGH_GRADIENT, 1, 1, param1=50, param2=20, minRadius=10, maxRadius=max)
+    circles = cv.HoughCircles(gray, cv.HOUGH_GRADIENT, 1, 1, param1=50, param2=20, minRadius=10, maxRadius=40)
 
     if circles is not None:
         out = []
@@ -91,7 +81,7 @@ def main():
 
                 for eye in location:
                     cropped2, offsetX2, offsetY2 = getCrop(frame, [eye[0] + offsetX, eye[1] + offsetY, eye[2], eye[3]])
-                    iris = isEyeOpenedC(cropped2)
+                    iris = isEyeOpened(cropped2)
                     isOpen = iris is not None
 
                     if eye[1] + offsetY >= face[1] + face[3] // 3 * 2:
