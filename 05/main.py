@@ -106,7 +106,7 @@ def main():
                 smileDetected, smiles = useCascade(smile_cascade, cropped, minNeighbors=10)
                 for smile in smiles:
                     smile = [smile[0] + offsetX, smile[1] + offsetY, smile[2], smile[3]]
-                    if smile[1] < face[1] + face[3] // 3 * 1.5:
+                    if smile[1] < face[1] + face[3] // 3 * 2:
                         continue
                     cv.rectangle(paint_frame, smile, (0, 255, 255), 6)
                     cv.rectangle(paint_frame, smile, (255, 255, 255), 2)
