@@ -57,7 +57,7 @@ def isEyeOpenedC(image, max=40):
 
 def main():
     cv.namedWindow("win", 0)
-    video = cv.VideoCapture(0)  #"fusek_face_car_01.avi"
+    video = cv.VideoCapture("fusek_face_car_01.avi")
     face_cascade = cv.CascadeClassifier("haarcascades/haarcascade_frontalface_default.xml")
     profile_cascade = cv.CascadeClassifier("haarcascades/haarcascade_profileface.xml")
     eye_cascade = cv.CascadeClassifier("eye_cascade_fusek.xml")
