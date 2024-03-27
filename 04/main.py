@@ -215,7 +215,8 @@ def main(argv):
         elif key == ord('b'):
             i = max(i - 1, 0)
             f1All.pop()
-            f1All.pop()
+            if len(f1All) != 0:
+                f1All.pop()
             continue
         i += 1
 
