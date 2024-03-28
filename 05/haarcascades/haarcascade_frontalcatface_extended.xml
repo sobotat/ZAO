@@ -28,7 +28,7 @@
 
  CHANGELOG:
 
- 2016-08-06: Re-trained with more negative samples and more stages. False
+ 2016-08-06-lecture: Re-trained with more negative samples and more stages. False
    positives are much rarer now. If you tailored your code for the cascade's
    previous version, now you should re-adjust the arguments of
    CascadeClassifier::detectMultiScale. For example, decrease the value of the

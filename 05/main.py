@@ -1,3 +1,5 @@
+import time
+
 import cv2 as cv
 import numpy as np
 
@@ -49,6 +51,7 @@ def main():
     smile_cascade = cv.CascadeClassifier("haarcascades/haarcascade_smile.xml")
 
     while True:
+        startTime = time.time()
         ret, frame = video.read()
         if frame is None:
             break
@@ -95,8 +98,11 @@ def main():
                     cv.rectangle(paint_frame, smile, (0, 255, 255), 6)
                     cv.rectangle(paint_frame, smile, (255, 255, 255), 2)
 
+        elapsedTime = time.time() - startTime
+        print(f"\033[1;36mDelta Time:\033[0m {elapsedTime}")
+
         cv.imshow("win", paint_frame)
-        if cv.waitKey(2) == ord("q"):
+        if cv.waitKey(1) == ord("q"):
             break
 
 if __name__ == "__main__":
