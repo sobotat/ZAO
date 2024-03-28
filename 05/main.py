@@ -5,7 +5,7 @@ def useCascade(cascade, frame, minNeighbors = 7):
     faces = cascade.detectMultiScale(frame, scaleFactor=1.2, minNeighbors=minNeighbors, minSize=(50, 50), maxSize=(500, 500))
     return len(faces) != 0, faces
 
-def remove_duplicates_with_threshold(data, threshold):
+def removeDuplicates(data, threshold):
     unique_data = []
     for row in data:
         is_duplicate = False
@@ -28,12 +28,7 @@ def getCrop(image, coords):
 
 def isEyeOpened(image):
     gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
-    blurred = cv.GaussianBlur(gray, (9, 9), 2)
-
-    cv.imshow("Preprocessed Image", blurred)
-
     circles = cv.HoughCircles(gray, cv.HOUGH_GRADIENT, 1, 1, param1=50, param2=20, minRadius=10, maxRadius=40)
-
     if circles is not None:
         out = []
         circles = np.uint16(np.around(circles))
@@ -52,7 +47,6 @@ def main():
     profile_cascade = cv.CascadeClassifier("haarcascades/haarcascade_profileface.xml")
     eye_cascade = cv.CascadeClassifier("eye_cascade_fusek.xml")
     smile_cascade = cv.CascadeClassifier("haarcascades/haarcascade_smile.xml")
-    template = cv.imread("template.png")
 
     while True:
         ret, frame = video.read()
@@ -68,8 +62,10 @@ def main():
             for item in location:
                 faces.append(item)
 
-            faces = remove_duplicates_with_threshold(faces, 100)
+            faces = removeDuplicates(faces, 100)
             for face in faces:
+                face = [face[0], face[1] - 20, face[2], face[3] + 40]
+
                 cv.rectangle(paint_frame, face, (0, 255, 0), 6)
                 cv.rectangle(paint_frame, face, (255, 255, 255), 2)
 
@@ -86,11 +82,9 @@ def main():
 
                     if eye[1] + offsetY >= face[1] + face[3] // 3 * 2:
                         continue
-                    if eye[0] + offsetX + eye[2] // 2 >= face[0] + face[2] // 2:
-                        cv.rectangle(paint_frame, [eye[0] + offsetX, eye[1] + offsetY, eye[2], eye[3]], (0, 0, 255), 2)
-                    else:
-                        cv.rectangle(paint_frame, [eye[0] + offsetX, eye[1] + offsetY, eye[2], eye[3]], (255, 0, 0), 2)
 
+                    isLeftEye = eye[0] + offsetX + eye[2] // 2 >= face[0] + face[2] // 2
+                    cv.rectangle(paint_frame, [eye[0] + offsetX, eye[1] + offsetY, eye[2], eye[3]], (0, 0, 255) if isLeftEye else (255, 0, 0), 2)
                     cv.circle(paint_frame, [eye[0] + offsetX, eye[1] + offsetY], 10, (0, 255, 0) if isOpen else (0, 0, 255), cv.FILLED)
 
                 smileDetected, smiles = useCascade(smile_cascade, cropped, minNeighbors=10)
