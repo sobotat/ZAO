@@ -67,7 +67,7 @@ def main():
 
             faces = removeDuplicates(faces, 100)
             for face in faces:
-                face = [face[0], face[1] - 20, face[2], face[3] + 40]
+                face = [face[0], face[1] - 20, face[2], face[3] + 60]
 
                 cv.rectangle(paint_frame, face, (0, 255, 0), 6)
                 cv.rectangle(paint_frame, face, (255, 255, 255), 2)
@@ -98,8 +98,10 @@ def main():
                     cv.rectangle(paint_frame, smile, (0, 255, 255), 6)
                     cv.rectangle(paint_frame, smile, (255, 255, 255), 2)
 
-        elapsedTime = time.time() - startTime
-        print(f"\033[1;36mDelta Time:\033[0m {elapsedTime}")
+        deltaTime = time.time() - startTime
+        print(f"\033[1;36mDelta Time:\033[0m {deltaTime}")
+        fps = 1 / deltaTime
+        print(f"\033[1;35mFPS:\033[0m {fps}")
 
         cv.imshow("win", paint_frame)
         if cv.waitKey(1) == ord("q"):
